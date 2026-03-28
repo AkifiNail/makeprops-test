@@ -15,11 +15,12 @@ export async function initDb() {
     CreatedAt  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     ) `);
 
-  //   const dataUser = await dbInstance.exec(`
-  //         INSERT INTO users (id , name , lastName , email , password) VALUES(1, 'dupont' , 'jean' , 'dupont@gmail.com' , 1234)`);
-  //   const adopt = dbInstance.transaction((cats) => {
-  //     dataUser.run();
-  //   });
+  // const dataUser = await dbInstance.exec(`
+  //         INSERT INTO users (id , name , lastName , email , password) VALUES(7, 'dupont' , 'jean' , 'dupont@gmail.com' , 1234), (2, 'martin', 'paul', 'martin@gmail.com', 5678),
+  // (3, 'durand', 'luc', 'durand@gmail.com', 91011);`);
+  //  const adopt = dbInstance.transaction((cats) => {
+  //   dataUser.run();
+  //  });
 }
 
 export function getDb() {

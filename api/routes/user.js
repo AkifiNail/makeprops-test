@@ -4,7 +4,7 @@ import { getDb } from "../db.js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/id", async (req, res) => {
   const db = getDb();
   const userId = req.body.id;
   if (!userId || typeof userId !== "number") {
@@ -65,6 +65,46 @@ router.delete("/delete", async (req, res) => {
     }
 
     deleteUser.run(userId);
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+router.get("/", async (req, res) => {
+  const db = getDb();
+  try {
+    const Alluser = await db.prepare(`SELECT * FROM users`);
+    const alluserData = Alluser.all();
+    if (!Alluser) {
+      return res.json("Erreur lors de la récupération des users");
+    }
+
+    console.log(alluserData);
+
+    res.json(alluserData);
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+router.post("/search", async (req, res) => {
+  const { name, lastName, email } = req.body;
+  const db = getDb();
+
+  console.log(name, lastName, email);
+
+  try {
+    const getSearch = await db.prepare(
+      `SELECT * FROM users WHERE name LIKE ? Or lastName LIKE ? Or email LIKE ?`,
+    );
+
+    const filteredData = await getSearch.all(
+      `%${name}%`,
+      `%${lastName}%`,
+      `%${email}%`,
+    );
+    console.log(filteredData);
+    res.json(filteredData);
   } catch (err) {
     console.error(err);
   }
