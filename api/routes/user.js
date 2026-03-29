@@ -1,6 +1,7 @@
 import express, { application } from "express";
 import { Router } from "express";
 import { getDb } from "../db.js";
+import bcrypt from "bcrypt";
 
 const router = express.Router();
 
@@ -105,6 +106,32 @@ router.post("/search", async (req, res) => {
     );
     console.log(filteredData);
     res.json(filteredData);
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+router.post("/register", async (req, res) => {
+  const db = getDb();
+  const { name, lastName, email, password } = req.body;
+
+  try {
+    const ifUserExists = await db.prepare(
+      `SELECT * FROM users WHERE (email) = (?)`,
+    );
+
+    const checkIfusersExist = ifUserExists.get(email);
+    if (checkIfusersExist) {
+      console.log("utilsiatuer existant");
+      return res.json("utilisateur existe deja");
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const addUsersReq = await db.prepare(
+      `INSERT INTO users (name , lastName , email , password) VALUES(? , ? , ? , ?)`,
+    );
+    const addNewUser = addUsersReq.run(name, lastName, email, hashedPassword);
+
+    console.log(addNewUser);
   } catch (err) {
     console.error(err);
   }
