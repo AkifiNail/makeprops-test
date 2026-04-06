@@ -2,6 +2,8 @@ import express, { application } from "express";
 import { Router } from "express";
 import { getDb } from "../db.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import validateToken from "../middlewares/authMiddlewares.js";
 
 const router = express.Router();
 
@@ -135,6 +137,52 @@ router.post("/register", async (req, res) => {
   } catch (err) {
     console.error(err);
   }
+});
+
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  const db = getDb();
+
+  try {
+    const userReq = await db.prepare(`SELECT * FROM users WHERE email = ?`);
+    const user = userReq.get(email);
+
+    if (!user) {
+      console.log("utilisateur introuvabke");
+      return res.json("utilisateur introuvable");
+    }
+
+    bcrypt.compare(password, user.password).then((match) => {
+      if (!match) {
+        return res.json("le mots de passe ne correspond pas");
+      }
+
+      console.log("next");
+      const accesstoken = jwt.sign({ user: user.id }, "clésupersecrete");
+
+      res.json({ user: user.email, accesstoken: accesstoken });
+    });
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+router.put("/me", validateToken, async (req, res) => {
+  console.log("cc");
+  const { email } = req.body;
+  const db = await getDb();
+  try {
+    const updateUserReq = await db.prepare(
+      `UPDATE users SET email = ? WHERE id = ?`,
+    );
+    const updateUser = updateUserReq.run(email, req.user);
+
+    console.log(updateUser);
+  } catch (err) {
+    console.log(err);
+  }
+
+  console.log(req.user);
 });
 
 // router.post("/add", async (req, res) => {
