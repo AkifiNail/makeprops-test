@@ -12,8 +12,11 @@ export async function initDb() {
     lastName   STRING  NOT NULL,
     email      STRING  NOT NULL,
     password   STRING  NOT NULL,
+    photo      STRING,
     CreatedAt  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-    ) `);
+    )
+    
+    `);
 
   // const dataUser = await dbInstance.exec(`
   //         INSERT INTO users (id , name , lastName , email , password) VALUES(7, 'dupont' , 'jean' , 'dupont@gmail.com' , 1234), (2, 'martin', 'paul', 'martin@gmail.com', 5678),

@@ -82,7 +82,7 @@ router.get("/", async (req, res) => {
       return res.json("Erreur lors de la récupération des users");
     }
 
-    console.log(alluserData);
+    // console.log(alluserData);
 
     res.json(alluserData);
   } catch (err) {
@@ -94,8 +94,6 @@ router.post("/search", async (req, res) => {
   const { name, lastName, email } = req.body;
   const db = getDb();
 
-  console.log(name, lastName, email);
-
   try {
     const getSearch = await db.prepare(
       `SELECT * FROM users WHERE name LIKE ? Or lastName LIKE ? Or email LIKE ?`,
@@ -106,7 +104,6 @@ router.post("/search", async (req, res) => {
       `%${lastName}%`,
       `%${email}%`,
     );
-    console.log(filteredData);
     res.json(filteredData);
   } catch (err) {
     console.error(err);
@@ -115,7 +112,11 @@ router.post("/search", async (req, res) => {
 
 router.post("/register", async (req, res) => {
   const db = getDb();
-  const { name, lastName, email, password } = req.body;
+  const { name, lastName, email, password, photo } = req.body;
+  // better-sqlite3: objects (e.g. {} from JSON-serialized File) are treated as
+  // binding maps, not scalar values — use only string | null for ? placeholders.
+  const photoForDb =
+    typeof photo === "string" && photo.length > 0 ? photo : null;
 
   try {
     const ifUserExists = await db.prepare(
@@ -129,11 +130,18 @@ router.post("/register", async (req, res) => {
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const addUsersReq = await db.prepare(
-      `INSERT INTO users (name , lastName , email , password) VALUES(? , ? , ? , ?)`,
+      `INSERT INTO users (name , lastName , email , password , photo) VALUES(? , ? , ? , ? , ?)`,
     );
-    const addNewUser = addUsersReq.run(name, lastName, email, hashedPassword);
+    const addNewUser = addUsersReq.run(
+      name,
+      lastName,
+      email,
+      hashedPassword,
+      photoForDb,
+    );
 
     console.log(addNewUser);
+    res.json("Utilisateur créer");
   } catch (err) {
     console.error(err);
   }
@@ -167,17 +175,46 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.get("/auth", validateToken, async (req, res) => {
+  console.log("test");
+  const db = getDb();
+  try {
+    const getUserReq = await db.prepare(`SELECT * FROM users WHERE id = ?`);
+    const userLogged = getUserReq.get(req.user);
+    res.json({
+      email: userLogged.email,
+      nom: userLogged.lastName,
+      prenom: userLogged.name,
+    });
+  } catch (err) {
+    console.error(err);
+  }
+});
+
 router.put("/me", validateToken, async (req, res) => {
-  console.log("cc");
   const { email } = req.body;
   const db = await getDb();
   try {
+    const userReq = await db.prepare(`
+      SELECT * FROM users WHERE id = ?
+      `);
+
+    const user = userReq.get(req.user);
+
+    console.log(user);
+
+    if (!user) {
+      return res.json({ error: "erreur utilisateur introuvable" });
+    }
+
+    res.json(user);
+
     const updateUserReq = await db.prepare(
       `UPDATE users SET email = ? WHERE id = ?`,
     );
     const updateUser = updateUserReq.run(email, req.user);
 
-    console.log(updateUser);
+    // console.log(updateUser);
   } catch (err) {
     console.log(err);
   }
