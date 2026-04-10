@@ -222,12 +222,18 @@ router.put("/me", validateToken, async (req, res) => {
   console.log(req.user);
 });
 
-// router.post("/add", async (req, res) => {
+// router.delete("delete", async (req, res) => {
 //   const db = getDb();
+//   const id = req.body.id;
 //   try {
+//     const delUser = await db.prepare(`
+//       DELETE * FROM users WHERE id = ?`);
+//     const userDeleted = delUser.run(id);
+
+//     console.log(userDeleted);
 //   } catch (err) {
 //     console.error(err);
 //   }
 // });
 
-export default router;
+// export default router;
